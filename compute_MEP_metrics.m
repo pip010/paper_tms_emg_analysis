@@ -1,21 +1,22 @@
-DataPath='C:\matlab\paper_tms_emg'; %my laptop
-%DataPath='D:\DATA\dropbox\Dropbox\matlab\meshing_expts';  %umc laptop
+defines;
 
 load(fullfile(DataPath,'data'));  %load scirun export from Petar
+load(fullfile(DataPath,'emg_traces'));  %load raw emg traces obtained from nnm files
+
+compute_replace_MEPs; %add our own MEP amplitude computation from filtered EMG traces
+
 eval(['cd ',DataPath]);   %folder to print results in
 vis_on=0;
 
-thisismatlab=0; %1 for matlab, 0 for octave
-
-subsel=[1:5];
+subsel=[1:7];
 exptlist={'cross','grid_ort','grid_par'};
 
 %parameters for analysis
-metric='C0';
-MEP_real_thr=0.00005; %thresholds for real MEPs (only values above will be included in analyses)
+metric='C5';
+MEP_real_thr=0.00001; %thresholds for real MEPs (only values above will be included in analyses)
 filterlowmeps=1; %switch off/on (0/1) removal of subthreshold MEPs
 use_transfer=0; % use a neuronal transfer function or not (1/0)
-
+totale=0;
 
 for tsub=1:length(subsel),
     subj=subsel(tsub);
@@ -85,27 +86,27 @@ for tsub=1:length(subsel),
             for stim=1:N
                 
                 if roi==1 && texp ==1
-                    Efield=data(subj).cross.ROI1PE{stim} + data(subj).cross.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=data(subj).cross.ROI1PE{stim} + totale*data(subj).cross.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).cross.FLAG{stim};
                 end
                 if roi==2 && texp ==1
-                    Efield=data(subj).cross.ROI2PE{stim} + data(subj).cross.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=data(subj).cross.ROI2PE{stim} + totale*data(subj).cross.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).cross.FLAG{stim};                    
                 end
                 if roi==1 && texp ==2
-                    Efield=data(subj).grid_ort.ROI1PE{stim} + data(subj).grid_ort.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=data(subj).grid_ort.ROI1PE{stim} + totale*data(subj).grid_ort.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).grid_ort.FLAG{stim};
                 end
                 if roi==2 && texp ==2
-                    Efield=data(subj).grid_ort.ROI2PE{stim} + data(subj).grid_ort.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=data(subj).grid_ort.ROI2PE{stim} + totale*data(subj).grid_ort.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).grid_ort.FLAG{stim};
                 end
                 if roi==1 && texp ==3
-                    Efield=data(subj).grid_par.ROI1PE{stim} + data(subj).grid_par.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=data(subj).grid_par.ROI1PE{stim} + totale*data(subj).grid_par.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).grid_par.FLAG{stim};
                 end
                 if roi==2 && texp ==3
-                    Efield=data(subj).grid_par.ROI2PE{stim} + data(subj).grid_par.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=data(subj).grid_par.ROI2PE{stim} + totale*data(subj).grid_par.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).grid_par.FLAG{stim};
                 end
 
@@ -116,11 +117,11 @@ for tsub=1:length(subsel),
                 epsilon=1/35; %chosen such that at distance 0, 'field' = 35 (similar magnitude as real field)
                 FlagDir=(flagpos(3,:)-flagpos(2,:)); %orientation of flag
                 FlagDirn=FlagDir/sqrt(sum(FlagDir.^2))'; %normalize
-                DirectionDistField=ones(size(Efield,1),1)*FlagDirn .*  (1./(Dist2face+epsilon));    
+                DirectionDistField=ones(size(Efield,1),1)*FlagDirn .*  ( (1./(Dist2face+epsilon) * [1 1 1]));    
                 
                 switch metric
                     case 'C0'
-                        MEP_comp(stim)=patch_mepmetric(DirectionDistField, norms_fixed,'C5',use_transfer); %metric computation                        
+                        MEP_comp(stim)=patch_mepmetric(DirectionDistField, norms_fixed,'C3',use_transfer); %metric computation                        
                     otherwise
                         MEP_comp(stim)=patch_mepmetric(Efield, norms_fixed,metric,use_transfer); %metric computation
                 end
@@ -128,15 +129,24 @@ for tsub=1:length(subsel),
             end
             switch (texp) %select real MEPs for the current experiment
                 case 1
-                    MEP_real=data(subj).cross.MEP;
+                    MEP_real=data(subj).cross.MEP_ours;  %change to .MEP for Neurosoft MEP amplitude
+                    MEP_real_ns=data(subj).cross.MEP;  
                 case 2
-                    MEP_real=data(subj).grid_ort.MEP;
+                    MEP_real=data(subj).grid_ort.MEP_ours;
+                    MEP_real_ns=data(subj).grid_ort.MEP;
                 case 3
-                    MEP_real=data(subj).grid_par.MEP;
+                    MEP_real=data(subj).grid_par.MEP_ours;
+                    MEP_real_ns=data(subj).grid_par.MEP;
             end
             
+            %create panel with scatterplot for MEP ns vs MEP ours
+            figure(3);
+            subplot(length(subsel),length(exptlist)*2,length(exptlist)*2*(tsub-1)+2*(texp-1) + roi);
+            plot(MEP_real_ns,MEP_real,'x');
+
             %create panel with scatterplot
-            figure(1);
+            figure(4);
+            
             subplot(length(subsel),length(exptlist)*2,length(exptlist)*2*(tsub-1)+2*(texp-1) + roi);
             plot(MEP_comp/1000,MEP_real,'x');   %plot modeled vs real MEP (modeled divided by 1000 for nicer axis labels)
             box on;

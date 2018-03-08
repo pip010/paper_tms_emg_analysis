@@ -3,7 +3,7 @@ function out = neuronal_transfer(in,thr,rc)
 %   'in' can be a vector or scalar.
 %   currently, the sigmoid function is used with a threshold value and a steepness
 
-out = 1 ./ (1 + e.^-( (in-thr)*rc));
+out = 1 ./ (1 + exp(-( (in-thr)*rc)));
 
 % =============================================================
 

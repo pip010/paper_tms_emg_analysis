@@ -6,6 +6,6 @@ function dist = point2line(A, B, P)
   n=(B-A)/sqrt(sum( (B-A).^2) );
   N = ones(size(P,1),1)*n;
   
-  distvec = ones(size(P,1),1)*A - P - sum( ((ones(size(P,1),1)*A-P).*N),2).*N;
+  distvec = ones(size(P,1),1)*A - P - (sum( ((ones(size(P,1),1)*A-P).*N),2)*[1 1 1] ).*N;
   dist=sqrt(sum(distvec.*distvec,2));
 end

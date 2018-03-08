@@ -34,7 +34,7 @@ function mepmetric = patch_mepmetric(field, norms, metric, ntransfer)
        lengthnorm=(sqrt(sum( (norms.*norms)' ))');    
 
        if ntransfer
-          mepmetric_all=lengthnorm.*neuronal_transfer(  (fieldmag+sum(field.*(-norms./lengthnorm),2))/4,5,0.5); %metric C4 summed over all faces
+          mepmetric_all=lengthnorm.*neuronal_transfer(  (fieldmag+sum(field.*(-norms./(lengthnorm * [1 1 1]) ),2))/4,5,0.5); %metric C4 summed over all faces
        else
           mepmetric_all=(fieldmag.*lengthnorm+sum(field.*(-norms),2))/4; %metric C4 summed over all faces
        end
