@@ -16,7 +16,8 @@ metric='C5';
 MEP_real_thr=0.00001; %thresholds for real MEPs (only values above will be included in analyses)
 filterlowmeps=1; %switch off/on (0/1) removal of subthreshold MEPs
 use_transfer=0; % use a neuronal transfer function or not (1/0)
-totale=0;
+primE=1;
+secE=0;
 
 for tsub=1:length(subsel),
     subj=subsel(tsub);
@@ -86,27 +87,27 @@ for tsub=1:length(subsel),
             for stim=1:N
                 
                 if roi==1 && texp ==1
-                    Efield=data(subj).cross.ROI1PE{stim} + totale*data(subj).cross.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=data(subj).cross.ROI1PE{stim} + secE*data(subj).cross.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).cross.FLAG{stim};
                 end
                 if roi==2 && texp ==1
-                    Efield=data(subj).cross.ROI2PE{stim} + totale*data(subj).cross.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=primE*data(subj).cross.ROI2PE{stim} + secE*data(subj).cross.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).cross.FLAG{stim};                    
                 end
                 if roi==1 && texp ==2
-                    Efield=data(subj).grid_ort.ROI1PE{stim} + totale*data(subj).grid_ort.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=primE*data(subj).grid_ort.ROI1PE{stim} + secE*data(subj).grid_ort.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).grid_ort.FLAG{stim};
                 end
                 if roi==2 && texp ==2
-                    Efield=data(subj).grid_ort.ROI2PE{stim} + totale*data(subj).grid_ort.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=primE*data(subj).grid_ort.ROI2PE{stim} + secE*data(subj).grid_ort.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).grid_ort.FLAG{stim};
                 end
                 if roi==1 && texp ==3
-                    Efield=data(subj).grid_par.ROI1PE{stim} + totale*data(subj).grid_par.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=primE*data(subj).grid_par.ROI1PE{stim} + secE*data(subj).grid_par.ROI1SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).grid_par.FLAG{stim};
                 end
                 if roi==2 && texp ==3
-                    Efield=data(subj).grid_par.ROI2PE{stim} + totale*data(subj).grid_par.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
+                    Efield=primE*data(subj).grid_par.ROI2PE{stim} + secE*data(subj).grid_par.ROI2SE{stim}; %total field in ROI1, 'cross' experiment
                     flagpos=data(subj).grid_par.FLAG{stim};
                 end
 
