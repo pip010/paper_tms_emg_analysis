@@ -16,8 +16,8 @@ metric='C5';
 MEP_real_thr=0.00001; %thresholds for real MEPs (only values above will be included in analyses)
 filterlowmeps=1; %switch off/on (0/1) removal of subthreshold MEPs
 use_transfer=0; % use a neuronal transfer function or not (1/0)
-primE=1;
-secE=0;
+primE=0;
+secE=1;
 
 for tsub=1:length(subsel),
     subj=subsel(tsub);
@@ -83,6 +83,7 @@ for tsub=1:length(subsel),
             end
             
             clear MEP_comp;
+            clear StimMO;
             %loop over all stimulations
             for stim=1:N
                 
@@ -114,12 +115,15 @@ for tsub=1:length(subsel),
                 %compute direction weighted distance field as H0 hypo
                 
                 Dist2face=point2line(flagpos(1,:),flagpos(2,:),facecentroids);
-
+                
                 epsilon=1/35; %chosen such that at distance 0, 'field' = 35 (similar magnitude as real field)
                 FlagDir=(flagpos(3,:)-flagpos(2,:)); %orientation of flag
                 FlagDirn=FlagDir/sqrt(sum(FlagDir.^2))'; %normalize
                 DirectionDistField=ones(size(Efield,1),1)*FlagDirn .*  ( (1./(Dist2face+epsilon) * [1 1 1]));    
                 
+                PoleVec=(flagpos(1,:)-flagpos(2,:));
+                StimMO(stim)=sqrt(sum(FlagDir.*FlagDir))/sqrt(sum(PoleVec.*PoleVec));
+
                 switch metric
                     case 'C0'
                         MEP_comp(stim)=patch_mepmetric(DirectionDistField, norms_fixed,'C3',use_transfer); %metric computation                        
@@ -146,15 +150,24 @@ for tsub=1:length(subsel),
             plot(MEP_real_ns,MEP_real,'x');
 
             %create panel with scatterplot
-            figure(4);
+            figure(1);
             
             subplot(length(subsel),length(exptlist)*2,length(exptlist)*2*(tsub-1)+2*(texp-1) + roi);
-            plot(MEP_comp/1000,MEP_real,'x');   %plot modeled vs real MEP (modeled divided by 1000 for nicer axis labels)
+            hold on;
+            if texp==1  %for cross
+              ilow=find(StimMO<mean(StimMO));
+              ihigh=find(StimMO>=mean(StimMO));
+              plot(MEP_comp(ilow)/1000,MEP_real(ilow),'bx');   %plot modeled vs real MEP (modeled divided by 1000 for nicer axis labels)
+              plot(MEP_comp(ihigh)/1000,MEP_real(ihigh),'rx');   %plot modeled vs real MEP (modeled divided by 1000 for nicer axis labels)
+            else
+              plot(MEP_comp/1000,MEP_real,'bx');   %plot modeled vs real MEP (modeled divided by 1000 for nicer axis labels)
+            end
+
             box on;
             if filterlowmeps
               i=find(MEP_real>MEP_real_thr);
             else 
-              i=[1:length(MEP_real)]; %select all
+              i=[1:length(MEP_freal)]; %select all
             end
             if ~isempty(i)
                 if thisismatlab  %correlation is different in matlab than octave
